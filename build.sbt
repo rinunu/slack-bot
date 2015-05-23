@@ -1,5 +1,11 @@
 scalaVersion := "2.11.6"
 
+enablePlugins(JavaAppPackaging)
+
+enablePlugins(UniversalPlugin)
+
+topLevelDirectory := None
+
 organization := "nu.rinu"
 
 name := "slack_bot"

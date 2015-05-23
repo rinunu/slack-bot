@@ -1,0 +1,9 @@
+dependencies:
+    override:
+        - sudo pip install awscli
+
+deployment:
+  production:
+    branch: circleci-test
+    commands:
+      - ./bin/deploy.sh
