@@ -4,6 +4,6 @@ dependencies:
 
 deployment:
   production:
-    branch: circleci-test
+    branch: master
     commands:
       - ./bin/deploy.sh
