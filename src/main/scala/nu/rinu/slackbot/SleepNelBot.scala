@@ -55,6 +55,8 @@ object SleepNelBot extends App {
    */
   def main(): Unit = {
     addShutdownHook()
+    
+    val targetUser = "takashima"
 
     /**
      * 「進捗どうですか?」する
@@ -71,7 +73,7 @@ object SleepNelBot extends App {
         "http://40.media.tumblr.com/bcdb555421139b93fcf516bc9ac7fff9/tumblr_n9zdk1Btkx1sckns5o1_1280.jpg"
       )
       val url = urls(random.nextInt(urls.size)) + "?" + random.nextInt(1000)
-      client.send(client.getChannelByName("test2"), s"@$user 進捗どうですか?\n$url")
+      client.send(client.getChannelByName("general"), s"@$user 進捗どうですか?\n$url")
     }
 
     /**
@@ -79,14 +81,14 @@ object SleepNelBot extends App {
      */
     class ShinchokuDodesukaJob extends Job {
       override def execute(context: JobExecutionContext) {
-        shinchokuDodesuka("rinu")
+        shinchokuDodesuka(targetUser)
       }
     }
 
-    Scheduler.add[ShinchokuDodesukaJob]("0 0 */1 * * ?")
+    Scheduler.add[ShinchokuDodesukaJob]("0 0 10-1/3 * * ?")
 
     addHandler(".*進捗.*".r) { m =>
-      shinchokuDodesuka("rinu")
+      shinchokuDodesuka(targetUser)
     }
 
     addHandler(".*まっくす.*".r) { m =>
@@ -94,7 +96,7 @@ object SleepNelBot extends App {
     }
 
     val ver = "1"
-    client.send(client.getChannelByName("test2"), s"もどりました〜 [$ver]")
+    client.send(client.getChannelByName("general"), s"もどりました〜")
 
     messages.toBlocking.last
   }
