@@ -22,6 +22,15 @@ object SleepNelBot extends App {
     new SlackClient(httpTransport, token)
   }
 
+  def addShutdownHook() {
+    Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
+      def run(): Unit = {
+        println("shutdown")
+        Scheduler.shutdown()
+      }
+    }))
+  }
+
   /**
    * 指定した正規表現にマッチした時に f を実行する
    */
@@ -45,6 +54,7 @@ object SleepNelBot extends App {
    * ここをいじってね
    */
   def main(): Unit = {
+    addShutdownHook()
 
     /**
      * 「進捗どうですか?」する
@@ -73,7 +83,7 @@ object SleepNelBot extends App {
       }
     }
 
-    Scheduler.add[ShinchokuDodesukaJob]("0 */1 * * * ?")
+    Scheduler.add[ShinchokuDodesukaJob]("0 0 */1 * * ?")
 
     addHandler(".*進捗.*".r) { m =>
       shinchokuDodesuka("rinu")

@@ -29,4 +29,8 @@ object Scheduler {
 
     scheduler.scheduleJob(job, trigger)
   }
+
+  def shutdown(): Unit = {
+    scheduler.shutdown()
+  }
 }
