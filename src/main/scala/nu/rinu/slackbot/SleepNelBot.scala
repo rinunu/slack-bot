@@ -3,9 +3,11 @@ package nu.rinu.slackbot
 import java.util.Random
 
 import com.google.api.client.http.javanet.NetHttpTransport
-import nu.rinu.slackbot.util.SlackClient.Message
-import nu.rinu.slackbot.util.{DialogueApi, Scheduler, SlackClient}
+import nu.rinu.slackbot.util.SimSimClient.Response
+import nu.rinu.slackbot.util.SlackClient.{User, Channel, Message}
+import nu.rinu.slackbot.util.{SimSimClient, DialogueApi, Scheduler, SlackClient}
 import org.quartz._
+import rx.lang.scala.Observable
 
 import scala.util.matching.Regex
 
@@ -25,6 +27,7 @@ object SleepNelBot extends App {
 
 
   val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
+  val simsimApiKeyOption = getenvOption("SIMSIM_API_KEY")
   val slackToken = getenv("SLACK_TOKEN")
 
   def addShutdownHook() {
@@ -61,6 +64,7 @@ object SleepNelBot extends App {
   val client = new SlackClient(httpTransport, slackToken)
   // 自分自身の発言は無視する(主に複数起動時)
   val messages = for {m <- client.getMessages if m.user != client.self} yield m
+  messages.onErrorResumeNext(a => Observable.empty)
 
   val random = new Random()
 
@@ -75,6 +79,12 @@ object SleepNelBot extends App {
     val targetUser = "takashima"
     //    val defaultChannel = client.getChannelByName("test2")
     val defaultChannel = client.getChannelByName("general")
+
+    def say(channel: Channel, text: String): Unit = {
+      // ちょっと間を空ける
+      Thread.sleep(1000)
+      client.send(channel, text)
+    }
 
     /**
      * 「進捗どうですか?」する
@@ -91,7 +101,8 @@ object SleepNelBot extends App {
         "http://40.media.tumblr.com/bcdb555421139b93fcf516bc9ac7fff9/tumblr_n9zdk1Btkx1sckns5o1_1280.jpg"
       )
       val url = urls(random.nextInt(urls.size)) + "?" + random.nextInt(1000)
-      client.send(defaultChannel, s"@$user 進捗どうですか?\n$url")
+
+      say(defaultChannel, s"@$user 進捗どうですか?\n$url")
     }
 
     /**
@@ -110,21 +121,45 @@ object SleepNelBot extends App {
     }
 
     addHandler(".*まっくす.*".r) { m =>
-      client.send(m.channel, s"まっくすまっくす！")
+      say(m.channel, s"まっくすまっくす！")
     }
 
-    for {key <- docomoApiKeyOption} {
-      val dialogueApi = new DialogueApi(key)
+    //    for {key <- docomoApiKeyOption} {
+    //      val dialogueApi = new DialogueApi(key)
+    //      addHandler { m =>
+    //        if (m.text.contains(client.self.id)) {
+    //          for {res <- dialogueApi.dialogue(m.text, m.user.name)} {
+    //            client.send(m.channel, s"@${m.user.name} ${res.text}")
+    //          }
+    //        }
+    //      }
+    //    }
+
+    for {key <- simsimApiKeyOption} {
+      val simsimApi = new SimSimClient(key)
+
+      def simsim(m: Message): Observable[Response] = {
+        simsimApi.request(m.text, m.user.name).onErrorResumeNext(e => Observable.empty)
+      }
+
       addHandler { m =>
         if (m.text.contains(client.self.id)) {
-          for {res <- dialogueApi.dialogue(m.text, m.user.name)} {
-            client.send(m.channel, s"@${m.user.name} ${res.text}")
+          for {res <- simsim(m)} {
+            say(m.channel, s"@${m.user.name} ${res.text}")
+          }
+        }
+      }
+
+      // ごくまれーに反応する
+      addHandler { m =>
+        if (random.nextInt(30) == 0) {
+          for {res <- simsim(m)} {
+            say(m.channel, s"@${m.user.name} ${res.text}")
           }
         }
       }
     }
 
-    val ver = "1"
     client.send(defaultChannel, s"もどりました〜")
 
     messages.toBlocking.last
