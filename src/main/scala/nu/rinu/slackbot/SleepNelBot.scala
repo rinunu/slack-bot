@@ -145,17 +145,6 @@ object SleepNelBot extends App {
       }
     }
 
-    //    for {key <- docomoApiKeyOption} {
-    //      val dialogueApi = new DialogueApi(key)
-    //      addHandler { m =>
-    //        if (m.text.contains(client.self.id)) {
-    //          for {res <- dialogueApi.dialogue(m.text, m.user.name)} {
-    //            client.send(m.channel, s"@${m.user.name} ${res.text}")
-    //          }
-    //        }
-    //      }
-    //    }
-
     for {key <- simsimiApiKeyOption} {
       val simsimiApi = new SimSimiClient(key)
 
