@@ -16,7 +16,7 @@ object SleepNelBot extends App {
   def connect(): SlackClient = {
     val token = System.getenv("SLACK_TOKEN")
     if (token == null) {
-      throw new RuntimeException("SLACK_TOKEN を設定してね")
+      throw new RuntimeException("環境変数 SLACK_TOKEN を設定してね")
     }
 
     new SlackClient(httpTransport, token)

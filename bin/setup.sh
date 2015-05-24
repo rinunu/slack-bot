@@ -18,3 +18,4 @@ sudo ./install auto
 
 sudo apt-get install daemon
 sudo apt-get install openjdk-7-jre
+sudo dpkg-reconfigure tzdata
