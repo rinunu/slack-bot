@@ -3,10 +3,11 @@ package nu.rinu.slackbot
 import java.util.Random
 
 import com.google.api.client.http.javanet.NetHttpTransport
+import nu.rinu.slackbot.util.Scheduler
 import nu.rinu.slackbot.util.SimSimClient.Response
 import nu.rinu.slackbot.util.SlackClient.{User, Channel, Message}
-import nu.rinu.slackbot.util.{SimSimClient, DialogueApi, Scheduler, SlackClient}
-import org.quartz._
+import nu.rinu.slackbot.util._
+import org.quartz.{JobExecutionContext, Job}
 import rx.lang.scala.Observable
 
 import scala.util.matching.Regex
@@ -25,9 +26,10 @@ object SleepNelBot extends App {
     }
   }
 
+  val slackToken = getenv("SLACK_TOKEN")
   val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
   val simsimApiKeyOption = getenvOption("SIMSIM_API_KEY")
-  val slackToken = getenv("SLACK_TOKEN")
+  val theCatApiKeyOption = getenvOption("THE_CAT_API_KEY")
 
   val simsimNgWords = Set("まっくす")
 
@@ -40,34 +42,40 @@ object SleepNelBot extends App {
     }))
   }
 
-  /**
-   * 指定した正規表現にマッチした時に f を実行する
-   */
-  def addHandler(r: Regex)(f: Message => Any): Unit = {
-    val R = r
-    for {m <- messages} {
-      m.text match {
-        case R() => f(m)
-        case _ =>
-      }
-    }
-  }
-
-  /**
-   * 指定した正規表現にマッチした時に f を実行する
-   */
-  def addHandler(f: Message => Any): Unit = {
-    for {m <- messages} {
-      f(m)
-    }
-  }
-
   val client = new SlackClient(httpTransport, slackToken)
   // 自分自身の発言は無視する(主に複数起動時)
   val messages = for {m <- client.getMessages if m.user != client.self} yield m
   messages.onErrorResumeNext(a => Observable.empty)
 
   val random = new Random()
+
+  type Handler = Message => Boolean
+  var handlers = List.empty[Handler]
+  for {m <- messages} {
+    handlers.find(f => f(m))
+  }
+
+  /**
+    */
+  def addHandler(f: Handler): Unit = {
+    handlers :+= f
+  }
+
+  /**
+   * 指定した正規表現にマッチした時に f を実行する
+   *
+   * @param f 処理を行ったら true
+   */
+  def addHandler(r: Regex)(f: Handler): Unit = {
+    val R = r
+    addHandler { m =>
+      m.text match {
+        case R() => f(m)
+        case _ => false
+      }
+    }
+  }
+
 
   /**
    * ボットの処理
@@ -119,10 +127,22 @@ object SleepNelBot extends App {
 
     addHandler(".*進捗.*".r) { m =>
       shinchokuDodesuka(targetUser)
+      true
     }
 
     addHandler(".*まっくす.*".r) { m =>
       say(m.channel, s"まっくすまっくす！")
+      true
+    }
+
+    for {key <- theCatApiKeyOption} {
+      val theCatApi = new TheCatApi(key)
+      addHandler( """.*(?:ねこ|猫).*""".r) { m =>
+        for {res <- theCatApi.request()} {
+          say(m.channel, s"ねこ探してきたのー\n${res.url}")
+        }
+        true
+      }
     }
 
     //    for {key <- docomoApiKeyOption} {
@@ -151,13 +171,16 @@ object SleepNelBot extends App {
           for {res <- simsim(m)} {
             say(m.channel, s"@${m.user.name} ${res.text}")
           }
+          true
         }
         // ごくまれーに反応する
         else if (random.nextInt(10) == 0 && !hasNgWord(m.text)) {
           for {res <- simsim(m)} {
             say(m.channel, s"@${m.user.name} ${res.text}")
           }
+          true
         }
+        false
       }
     }
 
