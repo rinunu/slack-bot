@@ -25,10 +25,11 @@ object SleepNelBot extends App {
     }
   }
 
-
   val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
   val simsimApiKeyOption = getenvOption("SIMSIM_API_KEY")
   val slackToken = getenv("SLACK_TOKEN")
+
+  val simsimNgWords = Set("まっくす")
 
   def addShutdownHook() {
     Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
@@ -142,17 +143,17 @@ object SleepNelBot extends App {
         simsimApi.request(m.text, m.user.name).onErrorResumeNext(e => Observable.empty)
       }
 
+      def hasNgWord(text: String) =
+        simsimNgWords.exists(ng => text.contains(ng))
+
       addHandler { m =>
         if (m.text.contains(client.self.id)) {
           for {res <- simsim(m)} {
             say(m.channel, s"@${m.user.name} ${res.text}")
           }
         }
-      }
-
-      // ごくまれーに反応する
-      addHandler { m =>
-        if (random.nextInt(5) == 0) {
+        // ごくまれーに反応する
+        else if (random.nextInt(10) == 0 && !hasNgWord(m.text)) {
           for {res <- simsim(m)} {
             say(m.channel, s"@${m.user.name} ${res.text}")
           }
