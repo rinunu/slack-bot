@@ -1,6 +1,6 @@
 package nu.rinu.slackbot.util
 
-import nu.rinu.slackbot.util.SimSimClient.{ResponseJson, Response}
+import nu.rinu.slackbot.util.SimSimiClient.{ResponseJson, Response}
 import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
 import rx.lang.scala.Observable
@@ -8,7 +8,7 @@ import rx.lang.scala.Observable
 import scala.util.control.NonFatal
 import scalaj.http.Http
 
-object SimSimClient {
+object SimSimiClient {
 
   private case class ResponseJson(
     result: Int,
@@ -22,7 +22,7 @@ object SimSimClient {
 
 }
 
-class SimSimClient(apiKey: String) {
+class SimSimiClient(apiKey: String) {
   private implicit val formats = DefaultFormats
 
   def request(text: String, nickname: String): Observable[Response] = {

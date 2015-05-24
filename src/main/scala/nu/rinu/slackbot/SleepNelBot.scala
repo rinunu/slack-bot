@@ -4,7 +4,7 @@ import java.util.Random
 
 import com.google.api.client.http.javanet.NetHttpTransport
 import nu.rinu.slackbot.util.Scheduler
-import nu.rinu.slackbot.util.SimSimClient.Response
+import nu.rinu.slackbot.util.SimSimiClient.Response
 import nu.rinu.slackbot.util.SlackClient.{User, Channel, Message}
 import nu.rinu.slackbot.util._
 import org.quartz.{JobExecutionContext, Job}
@@ -28,10 +28,10 @@ object SleepNelBot extends App {
 
   val slackToken = getenv("SLACK_TOKEN")
   val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
-  val simsimApiKeyOption = getenvOption("SIMSIM_API_KEY")
+  val simsimiApiKeyOption = getenvOption("SIMSIMI_API_KEY")
   val theCatApiKeyOption = getenvOption("THE_CAT_API_KEY")
 
-  val simsimNgWords = Set("まっくす")
+  val simsimiNgWords = Set("まっくす")
 
   def addShutdownHook() {
     Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
@@ -156,28 +156,28 @@ object SleepNelBot extends App {
     //      }
     //    }
 
-    for {key <- simsimApiKeyOption} {
-      val simsimApi = new SimSimClient(key)
+    for {key <- simsimiApiKeyOption} {
+      val simsimiApi = new SimSimiClient(key)
 
-      def simsim(m: Message): Observable[Response] = {
+      def simsimi(m: Message): Observable[Response] = {
         val text = m.text.replaceAll("""<@\w+>""", " ").replaceAll(":", " ")
         
-        simsimApi.request(text, m.user.name).onErrorResumeNext(e => Observable.empty)
+        simsimiApi.request(text, m.user.name).onErrorResumeNext(e => Observable.empty)
       }
 
       def hasNgWord(text: String) =
-        simsimNgWords.exists(ng => text.contains(ng))
+        simsimiNgWords.exists(ng => text.contains(ng))
 
       addHandler { m =>
         if (m.text.contains(client.self.id)) {
-          for {res <- simsim(m)} {
+          for {res <- simsimi(m)} {
             say(m.channel, s"@${m.user.name} ${res.text}")
           }
           true
         }
         // ごくまれーに反応する
         else if (random.nextInt(10) == 0 && !hasNgWord(m.text)) {
-          for {res <- simsim(m)} {
+          for {res <- simsimi(m)} {
             say(m.channel, s"@${m.user.name} ${res.text}")
           }
           true
