@@ -152,7 +152,7 @@ object SleepNelBot extends App {
 
       // ごくまれーに反応する
       addHandler { m =>
-        if (random.nextInt(30) == 0) {
+        if (random.nextInt(5) == 0) {
           for {res <- simsim(m)} {
             say(m.channel, s"@${m.user.name} ${res.text}")
           }
