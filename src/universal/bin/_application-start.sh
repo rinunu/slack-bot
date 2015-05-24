@@ -1,4 +1,5 @@
 #! /bin/sh
 
-export SLACK_TOKEN=`cat /bot/slack-token`
+dir=`dirname $0`
+. $dir/env.sh
 daemon --name sleepnel-bot --output=/var/log/sleepnel-bot-out -- /bot/bin/slack_bot

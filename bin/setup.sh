@@ -13,7 +13,7 @@ sudo ./install auto
 
 
 
-# /bot/slack-token を作る
+# /bot/env.sh を作る
 
 
 sudo apt-get install daemon

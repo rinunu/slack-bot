@@ -4,7 +4,7 @@ import java.util.Random
 
 import com.google.api.client.http.javanet.NetHttpTransport
 import nu.rinu.slackbot.util.SlackClient.Message
-import nu.rinu.slackbot.util.{Scheduler, SlackClient}
+import nu.rinu.slackbot.util.{DialogueApi, Scheduler, SlackClient}
 import org.quartz._
 
 import scala.util.matching.Regex
@@ -13,14 +13,19 @@ import scala.util.matching.Regex
 object SleepNelBot extends App {
   private val httpTransport = new NetHttpTransport
 
-  def connect(): SlackClient = {
-    val token = System.getenv("SLACK_TOKEN")
-    if (token == null) {
-      throw new RuntimeException("環境変数 SLACK_TOKEN を設定してね")
-    }
-
-    new SlackClient(httpTransport, token)
+  def getenvOption(name: String): Option[String] = {
+    Option(System.getenv(name))
   }
+
+  def getenv(name: String): String = {
+    getenvOption(name).getOrElse {
+      throw new RuntimeException(s"環境変数 $name を設定してね")
+    }
+  }
+
+
+  val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
+  val slackToken = getenv("SLACK_TOKEN")
 
   def addShutdownHook() {
     Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
@@ -44,8 +49,19 @@ object SleepNelBot extends App {
     }
   }
 
-  val client = connect()
-  val messages = client.getMessages
+  /**
+   * 指定した正規表現にマッチした時に f を実行する
+   */
+  def addHandler(f: Message => Any): Unit = {
+    for {m <- messages} {
+      f(m)
+    }
+  }
+
+  val client = new SlackClient(httpTransport, slackToken)
+  // 自分自身の発言は無視する(主に複数起動時)
+  val messages = for {m <- client.getMessages if m.user != client.self} yield m
+
   val random = new Random()
 
   /**
@@ -55,8 +71,10 @@ object SleepNelBot extends App {
    */
   def main(): Unit = {
     addShutdownHook()
-    
+
     val targetUser = "takashima"
+    //    val defaultChannel = client.getChannelByName("test2")
+    val defaultChannel = client.getChannelByName("general")
 
     /**
      * 「進捗どうですか?」する
@@ -73,7 +91,7 @@ object SleepNelBot extends App {
         "http://40.media.tumblr.com/bcdb555421139b93fcf516bc9ac7fff9/tumblr_n9zdk1Btkx1sckns5o1_1280.jpg"
       )
       val url = urls(random.nextInt(urls.size)) + "?" + random.nextInt(1000)
-      client.send(client.getChannelByName("general"), s"@$user 進捗どうですか?\n$url")
+      client.send(defaultChannel, s"@$user 進捗どうですか?\n$url")
     }
 
     /**
@@ -95,8 +113,19 @@ object SleepNelBot extends App {
       client.send(m.channel, s"まっくすまっくす！")
     }
 
+    for {key <- docomoApiKeyOption} {
+      val dialogueApi = new DialogueApi(key)
+      addHandler { m =>
+        if (m.text.contains(client.self.id)) {
+          for {res <- dialogueApi.dialogue(m.text, m.user.name)} {
+            client.send(m.channel, s"@${m.user.name} ${res.text}")
+          }
+        }
+      }
+    }
+
     val ver = "1"
-    client.send(client.getChannelByName("general"), s"もどりました〜")
+    client.send(defaultChannel, s"もどりました〜")
 
     messages.toBlocking.last
   }
