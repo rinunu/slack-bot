@@ -160,7 +160,9 @@ object SleepNelBot extends App {
       val simsimApi = new SimSimClient(key)
 
       def simsim(m: Message): Observable[Response] = {
-        simsimApi.request(m.text, m.user.name).onErrorResumeNext(e => Observable.empty)
+        val text = m.text.replaceAll("""<@\w+>""", " ").replaceAll(":", " ")
+        
+        simsimApi.request(text, m.user.name).onErrorResumeNext(e => Observable.empty)
       }
 
       def hasNgWord(text: String) =
