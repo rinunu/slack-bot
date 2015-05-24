@@ -1,13 +1,12 @@
 package nu.rinu.slackbot
 
-import java.util.Random
+import java.util.{Calendar, Date, Random}
 
 import com.google.api.client.http.javanet.NetHttpTransport
-import nu.rinu.slackbot.util.Scheduler
 import nu.rinu.slackbot.util.SimSimiClient.Response
-import nu.rinu.slackbot.util.SlackClient.{User, Channel, Message}
-import nu.rinu.slackbot.util._
-import org.quartz.{JobExecutionContext, Job}
+import nu.rinu.slackbot.util.SlackClient.{Channel, Message}
+import nu.rinu.slackbot.util.{Scheduler, _}
+import org.quartz.{Job, JobExecutionContext}
 import rx.lang.scala.Observable
 
 import scala.util.matching.Regex
@@ -24,6 +23,12 @@ object SleepNelBot extends App {
     getenvOption(name).getOrElse {
       throw new RuntimeException(s"環境変数 $name を設定してね")
     }
+  }
+
+  def getCurrentHours: Int = {
+    val cal = Calendar.getInstance()
+    cal.setTime(new Date)
+    cal.get(Calendar.HOUR)
   }
 
   val slackToken = getenv("SLACK_TOKEN")
@@ -100,6 +105,10 @@ object SleepNelBot extends App {
       client.send(channel, text)
     }
 
+    def randomly(messages: Seq[String]): String = {
+      messages(random.nextInt(messages.size))
+    }
+
     /**
      * 「進捗どうですか?」する
      */
@@ -114,7 +123,7 @@ object SleepNelBot extends App {
         "http://36.media.tumblr.com/c79d6b59dc4ee10595564c8aafc2225e/tumblr_mrkrngeogp1sckns5o1_500.png",
         "http://40.media.tumblr.com/bcdb555421139b93fcf516bc9ac7fff9/tumblr_n9zdk1Btkx1sckns5o1_1280.jpg"
       )
-      val url = urls(random.nextInt(urls.size)) + "?" + random.nextInt(1000)
+      val url = randomly(urls) + "?" + random.nextInt(1000)
 
       say(defaultChannel, s"@$user 進捗どうですか?\n$url")
     }
@@ -129,6 +138,31 @@ object SleepNelBot extends App {
     }
 
     Scheduler.add[ShinchokuDodesukaJob]("0 0 10-1/3 * * ?")
+
+    {
+      var lastMillis = 0L
+      addHandler( """.*(?:Done|DONE|"完了"|archived:).*""".r) { m =>
+        val currentMillis = System.currentTimeMillis()
+        if (currentMillis - lastMillis > 1000 * 60 * 30) {
+          val message = randomly(Seq(
+            "おつかれさまでした！",
+            "おつかれさま〜！"
+          ))
+
+          if ((1 to 5).contains(getCurrentHours)) {
+            val prefix = randomly(Seq("こんな時間までw ", ""))
+            say(m.channel, prefix + message)
+          } else {
+            say(m.channel, message)
+          }
+
+          lastMillis = currentMillis
+          true
+        } else {
+          false
+        }
+      }
+    }
 
     addHandler(".*進捗.*".r) { m =>
       shinchokuDodesuka(targetUser)
