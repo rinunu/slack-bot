@@ -30,6 +30,7 @@ object SleepNelBot extends App {
   val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
   val simsimiApiKeyOption = getenvOption("SIMSIMI_API_KEY")
   val theCatApiKeyOption = getenvOption("THE_CAT_API_KEY")
+  val env = getenvOption("ENV").getOrElse("develop")
 
   val simsimiNgWords = Set("まっくす")
 
@@ -86,8 +87,12 @@ object SleepNelBot extends App {
     addShutdownHook()
 
     val targetUser = "takashima"
-    //    val defaultChannel = client.getChannelByName("test2")
-    val defaultChannel = client.getChannelByName("general")
+
+    val defaultChannel = if (env == "production") {
+      client.getChannelByName("general")
+    } else {
+      client.getChannelByName("test2")
+    }
 
     def say(channel: Channel, text: String): Unit = {
       // ちょっと間を空ける
@@ -149,8 +154,8 @@ object SleepNelBot extends App {
       val simsimiApi = new SimSimiClient(key)
 
       def simsimi(m: Message): Observable[Response] = {
-        val text = m.text.replaceAll("""<@\w+>""", " ").replaceAll(":", " ")
-        
+        val text = m.text.replaceAll( """<@\w+>""", " ").replaceAll(":", " ")
+
         simsimiApi.request(text, m.user.name).onErrorResumeNext(e => Observable.empty)
       }
 
