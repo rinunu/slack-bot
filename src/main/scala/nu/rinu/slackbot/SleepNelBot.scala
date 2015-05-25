@@ -203,14 +203,9 @@ object SleepNelBot extends App {
           }
           true
         }
-        // ごくまれーに反応する
-        else if (random.nextInt(10) == 0 && !hasNgWord(m.text)) {
-          for {res <- simsimi(m)} {
-            say(m.channel, s"@${m.user.name} ${res.text}")
-          }
-          true
+        else {
+          false
         }
-        false
       }
     }
 
