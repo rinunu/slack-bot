@@ -62,12 +62,6 @@ class SimpleBot(slackToken: String, additionalHandlers: Seq[Handler] = Seq.empty
     }
   }
 
-  for (h <- additionalHandlers) {
-    addHandler { m =>
-      h.apply(Context(rtmApi, webApi), m)
-    }
-  }
-
   /**
    * チャンネルに発言します
    */
@@ -193,6 +187,13 @@ class SimpleBot(slackToken: String, additionalHandlers: Seq[Handler] = Seq.empty
         true
       } else {
         false
+      }
+    }
+
+    // 優先度的にここに。そのうち全部 additionalHandler 化するの。
+    for (h <- additionalHandlers) {
+      addHandler { m =>
+        h.apply(Context(rtmApi, webApi), m)
       }
     }
 
