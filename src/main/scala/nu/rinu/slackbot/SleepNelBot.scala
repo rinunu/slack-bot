@@ -133,16 +133,6 @@ object SleepNelBot extends App {
 
     Scheduler.add[ShinchokuDodesukaJob]("0 0 10-1/3 * * ?")
 
-    addHandler(".*進捗.*".r) { m =>
-      shinchokuDodesuka(targetUser)
-      true
-    }
-
-    addHandler(".*進捗(?:だめ|ダメ).*".r) { m =>
-      say(m.channel, "ぴええええええ！")
-      true
-    }
-
     addHandler(".*まっくす.*".r) { m =>
       say(m.channel, s"まっくすまっくす！")
       true
@@ -219,6 +209,16 @@ object SleepNelBot extends App {
             false
         }
       }
+    }
+
+    addHandler(".*進捗(?:だめ|ダメ).*".r) { m =>
+      say(m.channel, "ぴええええええ！")
+      true
+    }
+
+    addHandler(".*進捗.*".r) { m =>
+      shinchokuDodesuka(targetUser)
+      true
     }
 
     // chat
