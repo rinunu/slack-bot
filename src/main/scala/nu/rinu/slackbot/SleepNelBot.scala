@@ -146,22 +146,6 @@ object SleepNelBot extends App {
 
     Scheduler.add[ShinchokuDodesukaJob]("0 0 10-1/3 * * ?")
 
-    addHandler(".*まっくす.*".r) { m =>
-      say(m.channel, s"まっくすまっくす！")
-      true
-    }
-
-    // neko search
-    for {key <- theCatApiKeyOption} {
-      val theCatApi = new TheCatApi(key)
-      addHandler( """.*(?:ねこ|猫).*""".r) { m =>
-        for {res <- theCatApi.request()} {
-          sayImage(m.channel, s"ねこ探してきたのー", new URI(res.url))
-        }
-        true
-      }
-    }
-
     // image search
     for {apiKey <- cseApiKey; searchEngineId <- cseSearchEngineId} {
       val customSearch = new GoogleCustomSearch(apiKey, searchEngineId)
@@ -216,11 +200,27 @@ object SleepNelBot extends App {
       }
     }
 
+    // neko search
+    for {key <- theCatApiKeyOption} {
+      val theCatApi = new TheCatApi(key)
+      addHandler( """.*(?:ねこ|猫).*""".r) { m =>
+        for {res <- theCatApi.request()} {
+          sayImage(m.channel, s"ねこ探してきたのー", new URI(res.url))
+        }
+        true
+      }
+    }
+
     val lgtm = new Lgtm()
     addHandler("lgtm".r) { m =>
       for {res <- lgtm.request()} {
         sayImage(m.channel, "lgtm too!", res.imageUri)
       }
+      true
+    }
+
+    addHandler(".*まっくす.*".r) { m =>
+      say(m.channel, s"まっくすまっくす！")
       true
     }
 
