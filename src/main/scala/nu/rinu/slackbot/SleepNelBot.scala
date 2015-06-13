@@ -1,5 +1,6 @@
 package nu.rinu.slackbot
 
+import java.net.URI
 import java.util.Random
 
 import com.google.api.client.http.javanet.NetHttpTransport
@@ -83,6 +84,20 @@ object SleepNelBot extends App {
     client.send(channel, text)
   }
 
+  /**
+   * 画像を発言します
+   */
+  def sayImage(channel: Channel, text: String, imageUri: URI): Unit = {
+    webApi.chatPostMessage(
+      channel,
+      Some(text),
+      List(Attachment("画像なの",
+        image_url = Some(imageUri.toString)
+      )),
+      asUser = true
+    )
+  }
+
   val defaultChannel = if (env == Production) {
     client.getChannelByName("general")
   } else {
@@ -117,9 +132,7 @@ object SleepNelBot extends App {
         "http://36.media.tumblr.com/c79d6b59dc4ee10595564c8aafc2225e/tumblr_mrkrngeogp1sckns5o1_500.png",
         "http://40.media.tumblr.com/bcdb555421139b93fcf516bc9ac7fff9/tumblr_n9zdk1Btkx1sckns5o1_1280.jpg"
       )
-      val url = randomly(urls) + "?" + random.nextInt(1000)
-
-      say(defaultChannel, s"@$user 進捗どうですか?\n$url")
+      sayImage(defaultChannel, s"@$user 進捗どうですか?", new URI(randomly(urls)))
     }
 
     /**
@@ -143,7 +156,7 @@ object SleepNelBot extends App {
       val theCatApi = new TheCatApi(key)
       addHandler( """.*(?:ねこ|猫).*""".r) { m =>
         for {res <- theCatApi.request()} {
-          say(m.channel, s"ねこ探してきたのー\n${res.url}")
+          sayImage(m.channel, s"ねこ探してきたのー", new URI(res.url))
         }
         true
       }
@@ -159,16 +172,8 @@ object SleepNelBot extends App {
         def searchOne(word: String): Unit = {
           for {res <- customSearch.searchImages(word)
           } {
-            val msg = "探してきたの〜"
             if (res.images.nonEmpty) {
-              webApi.chatPostMessage(
-                m.channel,
-                Some(msg),
-                List(Attachment("画像なの",
-                  image_url = Some(randomly(res.images).uri.toString)
-                )),
-                asUser = true
-              )
+              sayImage(m.channel, "探してきたの〜", randomly(res.images).uri)
             }
           }
         }
