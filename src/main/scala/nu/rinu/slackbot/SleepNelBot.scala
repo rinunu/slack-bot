@@ -1,5 +1,6 @@
 package nu.rinu.slackbot
 
+import nu.rinu.slackbot.addin.ShinchokuDodesuka
 import nu.rinu.slackbot.util.Scheduler
 import nu.rinu.slackbot.util.Utils._
 
@@ -29,7 +30,15 @@ object SleepNelBot extends App {
   val bots = for {i <- 0 to 10
                   token <- getenvOption("SLACK_TOKEN" + i)} yield {
     println(s"start bot $i")
-    new SimpleBot(token, targetUser)
+
+    // 1つめだけ特別なのつける
+    if (i == 0) {
+      new SimpleBot(token, List(
+        new ShinchokuDodesuka(".*進捗.*".r, targetUser)
+      ))
+    } else {
+      new SimpleBot(token)
+    }
   }
 
   bots.head.messages.toBlocking.last

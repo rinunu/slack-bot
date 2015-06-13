@@ -3,6 +3,7 @@ package nu.rinu.slackbot
 import java.net.URI
 import java.util.Random
 
+import nu.rinu.slackbot.addin.{Context, Handler}
 import nu.rinu.slackbot.core.SlackRtmApi.{Channel, Message}
 import nu.rinu.slackbot.core.SlackWebApi.Attachment
 import nu.rinu.slackbot.core.{SlackRtmApi, SlackWebApi}
@@ -15,7 +16,7 @@ import rx.lang.scala.Observable
 import scala.util.matching.Regex
 
 
-class SimpleBot(slackToken: String, targetUser: String) {
+class SimpleBot(slackToken: String, additionalHandlers: Seq[Handler] = Seq.empty) {
   private val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
   private val simsimiApiKeyOption = getenvOption("SIMSIMI_API_KEY")
   private val theCatApiKeyOption = getenvOption("THE_CAT_API_KEY")
@@ -25,16 +26,16 @@ class SimpleBot(slackToken: String, targetUser: String) {
 
   private val simsimiNgWords = Set("まっくす")
 
-  private val client = new SlackRtmApi(slackToken)
+  private val rtmApi = new SlackRtmApi(slackToken)
   private val webApi = new SlackWebApi(slackToken)
 
   // 自分自身の発言は無視する(主に複数起動時)
-  val messages = for {m <- client.getMessages if m.user != client.self} yield m
+  val messages = for {m <- rtmApi.getMessages if m.user != rtmApi.self} yield m
 
   private val random = new Random()
 
-  private type Handler = Message => Boolean
-  private var handlers = List.empty[Handler]
+  private type HandlerFn = Message => Boolean
+  private var handlers = List.empty[HandlerFn]
 
   for {m <- messages} {
     handlers.find(f => f(m))
@@ -42,7 +43,7 @@ class SimpleBot(slackToken: String, targetUser: String) {
 
   /**
     */
-  private def addHandler(f: Handler): Unit = {
+  private def addHandler(f: HandlerFn): Unit = {
     handlers :+= f
   }
 
@@ -51,7 +52,7 @@ class SimpleBot(slackToken: String, targetUser: String) {
    *
    * @param f 処理を行ったら true
    */
-  private def addHandler(r: Regex)(f: Handler): Unit = {
+  private def addHandler(r: Regex)(f: HandlerFn): Unit = {
     val R = r
     addHandler { m =>
       m.text match {
@@ -61,13 +62,19 @@ class SimpleBot(slackToken: String, targetUser: String) {
     }
   }
 
+  for (h <- additionalHandlers) {
+    addHandler { m =>
+      h.apply(Context(rtmApi, webApi), m)
+    }
+  }
+
   /**
    * チャンネルに発言します
    */
   private def say(channel: Channel, text: String): Unit = {
     // ちょっと間を空ける
     Thread.sleep(1000)
-    client.send(channel, text)
+    rtmApi.send(channel, text)
   }
 
   /**
@@ -90,22 +97,6 @@ class SimpleBot(slackToken: String, targetUser: String) {
    * ここをいじってね
    */
   private def main(): Unit = {
-    /**
-     * 「進捗どうですか?」する
-     */
-    def shinchokuDodesuka(channel: Channel, user: String): Unit = {
-      val urls = Seq(
-        "http://img2.finalfantasyxiv.com/accimg/01/00/0100ad42c5b1eb63e34023b2673dbd1575a71cc2.jpg",
-        "http://40.media.tumblr.com/c47cbed880e821146fb67a6cf1d9993d/tumblr_mqpqr1e07H1sckns5o1_1280.jpg",
-        "http://blog-imgs-64.fc2.com/a/k/a/akami1028/tumblr_mrxbyrqiN01sckns5o1_r1_500.jpg",
-        "http://37.media.tumblr.com/724b165a61e0d310e1715bc4cb74c538/tumblr_mxzj2hPEE01ro6w1ho1_500.jpg",
-        "http://img.gifmagazine.net/gifmagazine/images/129827/original.gif",
-        "http://41.media.tumblr.com/e38911a2b6c4782a4bd0ccd33511bd63/tumblr_n86la8y54X1sckns5o1_500.png",
-        "http://36.media.tumblr.com/c79d6b59dc4ee10595564c8aafc2225e/tumblr_mrkrngeogp1sckns5o1_500.png",
-        "http://40.media.tumblr.com/bcdb555421139b93fcf516bc9ac7fff9/tumblr_n9zdk1Btkx1sckns5o1_1280.jpg"
-      )
-      sayImage(channel, s"@$user 進捗どうですか?", new URI(randomly(urls)))
-    }
 
     //    /**
     //     * 定期的に「進捗どうですか?」する
@@ -197,13 +188,12 @@ class SimpleBot(slackToken: String, targetUser: String) {
     }
 
     addHandler(".*進捗(?:だめ|ダメ).*".r) { m =>
-      say(m.channel, "ぴええええええ！")
-      true
-    }
-
-    addHandler(".*進捗.*".r) { m =>
-      shinchokuDodesuka(m.channel, targetUser)
-      true
+      if (m.text.contains(rtmApi.self.id)) {
+        say(m.channel, "ぴええええええ！")
+        true
+      } else {
+        false
+      }
     }
 
     // chat
@@ -220,7 +210,7 @@ class SimpleBot(slackToken: String, targetUser: String) {
         simsimiNgWords.exists(ng => text.contains(ng))
 
       addHandler { m =>
-        if (m.text.contains(client.self.id)) {
+        if (m.text.contains(rtmApi.self.id)) {
           for {res <- simsimi(m)} {
             say(m.channel, s"@${m.user.name} ${res.text}")
           }

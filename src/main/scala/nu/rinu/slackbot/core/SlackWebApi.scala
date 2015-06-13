@@ -59,9 +59,10 @@ class SlackWebApi(token: String) {
   val endpoint = new URI("https://slack.com/api/")
 
   def chatPostMessage(channel: Channel,
-    attachments: Seq[Attachment]
+    text: String,
+    attachments: Attachment*
   ) {
-    chatPostMessage(channel, None, attachments)
+    chatPostMessage(channel, Some(text), attachments)
   }
 
   def chatPostMessage(channel: Channel,
@@ -73,7 +74,7 @@ class SlackWebApi(token: String) {
   def chatPostMessage(channel: Channel,
     textOption: Option[String],
     attachments: Seq[Attachment],
-    asUser: Boolean = false
+    asUser: Boolean = true
   ) {
 
     val req = Http(endpoint.resolve("chat.postMessage").toString)
@@ -91,7 +92,7 @@ class SlackWebApi(token: String) {
 
     val res = req.asString
     if (res.isSuccess) {
-//      println("受信 " + res.body)
+      //      println("受信 " + res.body)
       val resJson = Serialization.read[ResponseJson](res.body)
     } else {
       sys.error(s"error: code = ${res.code}, ${res.body}")
