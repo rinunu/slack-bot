@@ -2,7 +2,7 @@ package nu.rinu.slackbot.core
 
 import java.net.URI
 
-import nu.rinu.slackbot.core.SlackClient.Channel
+import nu.rinu.slackbot.core.SlackRtmApi.Channel
 import nu.rinu.slackbot.core.SlackWebApi.{Attachment, ResponseJson}
 import org.json4s.DefaultFormats
 import org.json4s.native.Serialization

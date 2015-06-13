@@ -3,9 +3,9 @@ package nu.rinu.slackbot
 import java.net.URI
 import java.util.Random
 
-import nu.rinu.slackbot.core.SlackClient.{Channel, Message}
+import nu.rinu.slackbot.core.SlackRtmApi.{Channel, Message}
 import nu.rinu.slackbot.core.SlackWebApi.Attachment
-import nu.rinu.slackbot.core.{SlackClient, SlackWebApi}
+import nu.rinu.slackbot.core.{SlackRtmApi, SlackWebApi}
 import nu.rinu.slackbot.util.SimSimiClient.Response
 import nu.rinu.slackbot.util.Utils._
 import nu.rinu.slackbot.util._
@@ -29,7 +29,7 @@ class SimpleBot(slackToken: String) {
 
   private val simsimiNgWords = Set("まっくす")
 
-  private val client = new SlackClient(slackToken)
+  private val client = new SlackRtmApi(slackToken)
   private val webApi = new SlackWebApi(slackToken)
 
   // 自分自身の発言は無視する(主に複数起動時)

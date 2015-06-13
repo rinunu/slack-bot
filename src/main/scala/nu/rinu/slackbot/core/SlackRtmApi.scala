@@ -3,7 +3,7 @@ package nu.rinu.slackbot.core
 import java.net.URI
 import javax.websocket._
 
-import nu.rinu.slackbot.core.SlackClient._
+import nu.rinu.slackbot.core.SlackRtmApi._
 import org.json4s._
 import org.json4s.native.Serialization
 import rx.lang.scala.Observable
@@ -11,7 +11,7 @@ import rx.lang.scala.subjects.PublishSubject
 
 import scalaj.http.Http
 
-object SlackClient {
+object SlackRtmApi {
 
   /**
    * すべてのメッセージに共通するもの
@@ -71,10 +71,10 @@ object SlackClient {
 }
 
 /**
- * 発言をひたすら通知します
+ * https://api.slack.com/rtm
  */
 @ClientEndpoint()
-class SlackClient(token: String) {
+class SlackRtmApi(token: String) {
   private var userSession: Session = _
 
   private implicit val formats = DefaultFormats
