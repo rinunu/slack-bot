@@ -133,7 +133,7 @@ class SimpleBot(slackToken: String) {
       }
     }
 
-    Scheduler.add[ShinchokuDodesukaJob]("0 0 10-1/3 * * ?")
+//    Scheduler.add[ShinchokuDodesukaJob]("0 0 10-1/3 * * ?")
 
     // image search
     for {apiKey <- cseApiKey; searchEngineId <- cseSearchEngineId} {
