@@ -138,6 +138,11 @@ object SleepNelBot extends App {
       true
     }
 
+    addHandler(".*進捗(?:だめ|ダメ).*".r) { m =>
+      say(m.channel, "ぴええええええ！")
+      true
+    }
+
     addHandler(".*まっくす.*".r) { m =>
       say(m.channel, s"まっくすまっくす！")
       true
@@ -187,7 +192,7 @@ object SleepNelBot extends App {
               Some(msg),
               res.images.map(image => Attachment("画像なの",
                 title = Some(image.title),
-                title_link = Some(image.uri.toString),
+                title_link = Some(image.contextRui.toString),
                 thumb_url = Some(image.thumbnailUri.toString))
               ),
               asUser = true)
@@ -242,7 +247,7 @@ object SleepNelBot extends App {
       }
     }
 
-    client.send(defaultChannel, s"もどりました〜")
+    client.send(defaultChannel, s"もどったの〜")
 
     messages.toBlocking.last
   }
