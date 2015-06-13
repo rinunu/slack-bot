@@ -1,15 +1,15 @@
-package nu.rinu.slackbot.util
+package nu.rinu.slackbot.core
 
 import java.net.URI
 import javax.websocket._
 
 import com.google.api.client.http.{GenericUrl, HttpTransport}
+import nu.rinu.slackbot.core.SlackClient._
 import org.json4s._
 import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization
 import rx.lang.scala.Observable
 import rx.lang.scala.subjects.PublishSubject
-import SlackClient._
 
 object SlackClient {
 

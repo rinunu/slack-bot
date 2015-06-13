@@ -4,7 +4,9 @@ slack bot
 
 # 実行
 ```sh
-export SLACK_TOKEN=xxxxxx
+export SLACK_TOKEN=xxxxx
+export SIMSIMI_API_KEY=xxxxx # option
+export THE_CAT_API_KEY=xxxxx # option
 bin/sbt "runMain nu.rinu.slackbot.SleepNelBot"
 ```
 

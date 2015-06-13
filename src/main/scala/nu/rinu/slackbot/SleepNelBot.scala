@@ -1,10 +1,12 @@
 package nu.rinu.slackbot
 
-import java.util.{Calendar, Date, Random}
+import java.util.Random
 
 import com.google.api.client.http.javanet.NetHttpTransport
+import nu.rinu.slackbot.core.SlackClient
+import nu.rinu.slackbot.core.SlackClient.{Channel, Message}
 import nu.rinu.slackbot.util.SimSimiClient.Response
-import nu.rinu.slackbot.util.SlackClient.{Channel, Message}
+import nu.rinu.slackbot.util.Utils._
 import nu.rinu.slackbot.util.{Scheduler, _}
 import org.quartz.{Job, JobExecutionContext}
 import rx.lang.scala.Observable
@@ -13,23 +15,8 @@ import scala.util.matching.Regex
 
 
 object SleepNelBot extends App {
-  private val httpTransport = new NetHttpTransport
-
-  def getenvOption(name: String): Option[String] = {
-    Option(System.getenv(name))
-  }
-
-  def getenv(name: String): String = {
-    getenvOption(name).getOrElse {
-      throw new RuntimeException(s"環境変数 $name を設定してね")
-    }
-  }
-
-  def getCurrentHours: Int = {
-    val cal = Calendar.getInstance()
-    cal.setTime(new Date)
-    cal.get(Calendar.HOUR)
-  }
+  val httpTransport = new NetHttpTransport
+  val Production = "production"
 
   val slackToken = getenv("SLACK_TOKEN")
   val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
@@ -51,7 +38,6 @@ object SleepNelBot extends App {
   val client = new SlackClient(httpTransport, slackToken)
   // 自分自身の発言は無視する(主に複数起動時)
   val messages = for {m <- client.getMessages if m.user != client.self} yield m
-  messages.onErrorResumeNext(a => Observable.empty)
 
   val random = new Random()
 
@@ -82,6 +68,21 @@ object SleepNelBot extends App {
     }
   }
 
+  /**
+   * チャンネルに発言します
+   */
+  def say(channel: Channel, text: String): Unit = {
+    // ちょっと間を空ける
+    Thread.sleep(1000)
+    client.send(channel, text)
+  }
+
+  /**
+   * 指定した要素からランダムに 1 つ選択して返します
+   */
+  def randomly(strings: Seq[String]): String = {
+    strings(random.nextInt(strings.size))
+  }
 
   /**
    * ボットの処理
@@ -91,22 +92,16 @@ object SleepNelBot extends App {
   def main(): Unit = {
     addShutdownHook()
 
-    val targetUser = "takashima"
-
-    val defaultChannel = if (env == "production") {
+    val defaultChannel = if (env == Production) {
       client.getChannelByName("general")
     } else {
       client.getChannelByName("test2")
     }
 
-    def say(channel: Channel, text: String): Unit = {
-      // ちょっと間を空ける
-      Thread.sleep(1000)
-      client.send(channel, text)
-    }
-
-    def randomly(messages: Seq[String]): String = {
-      messages(random.nextInt(messages.size))
+    val targetUser = if (env == Production) {
+      "takashima"
+    } else {
+      "rinu"
     }
 
     /**
@@ -138,31 +133,6 @@ object SleepNelBot extends App {
     }
 
     Scheduler.add[ShinchokuDodesukaJob]("0 0 10-1/3 * * ?")
-
-    {
-      var lastMillis = 0L
-      addHandler( """.*(?:Done|DONE|"完了"|archived:).*""".r) { m =>
-        val currentMillis = System.currentTimeMillis()
-        if (currentMillis - lastMillis > 1000 * 60 * 30) {
-          val message = randomly(Seq(
-            "おつかれさまでした！",
-            "おつかれさま〜！"
-          ))
-
-          if ((1 to 5).contains(getCurrentHours)) {
-            val prefix = randomly(Seq("こんな時間までw ", ""))
-            say(m.channel, prefix + message)
-          } else {
-            say(m.channel, message)
-          }
-
-          lastMillis = currentMillis
-          true
-        } else {
-          false
-        }
-      }
-    }
 
     addHandler(".*進捗.*".r) { m =>
       shinchokuDodesuka(targetUser)
