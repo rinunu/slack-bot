@@ -1,11 +1,13 @@
 package nu.rinu.slackbot.util
 
-import java.util.{Date, Calendar}
+import java.util.{Random, Date, Calendar}
 
 /**
  * 雑多な便利メソッド
  */
 object Utils {
+  private val random = new Random()
+
   def getenvOption(name: String): Option[String] = {
     Option(System.getenv(name))
   }
@@ -20,5 +22,12 @@ object Utils {
     val cal = Calendar.getInstance()
     cal.setTime(new Date)
     cal.get(Calendar.HOUR)
+  }
+
+  /**
+   * 指定した要素からランダムに 1 つ選択して返します
+   */
+  def randomly[A](seq: Seq[A]): A = {
+    seq(random.nextInt(seq.size))
   }
 }

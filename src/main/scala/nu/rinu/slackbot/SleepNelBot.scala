@@ -3,7 +3,8 @@ package nu.rinu.slackbot
 import java.util.Random
 
 import com.google.api.client.http.javanet.NetHttpTransport
-import nu.rinu.slackbot.core.SlackClient
+import nu.rinu.slackbot.core.SlackWebApi.Attachment
+import nu.rinu.slackbot.core.{SlackWebApi, SlackClient}
 import nu.rinu.slackbot.core.SlackClient.{Channel, Message}
 import nu.rinu.slackbot.util.SimSimiClient.Response
 import nu.rinu.slackbot.util.Utils._
@@ -22,6 +23,10 @@ object SleepNelBot extends App {
   val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
   val simsimiApiKeyOption = getenvOption("SIMSIMI_API_KEY")
   val theCatApiKeyOption = getenvOption("THE_CAT_API_KEY")
+
+  val cseSearchEngineId = getenvOption("CSE_SEARCH_ENGINE_ID")
+  val cseApiKey = getenvOption("CSE_API_KEY")
+
   val env = getenvOption("ENV").getOrElse("develop")
 
   val simsimiNgWords = Set("まっくす")
@@ -36,6 +41,7 @@ object SleepNelBot extends App {
   }
 
   val client = new SlackClient(httpTransport, slackToken)
+  val webApi = new SlackWebApi(slackToken)
   // 自分自身の発言は無視する(主に複数起動時)
   val messages = for {m <- client.getMessages if m.user != client.self} yield m
 
@@ -77,11 +83,16 @@ object SleepNelBot extends App {
     client.send(channel, text)
   }
 
-  /**
-   * 指定した要素からランダムに 1 つ選択して返します
-   */
-  def randomly(strings: Seq[String]): String = {
-    strings(random.nextInt(strings.size))
+  val defaultChannel = if (env == Production) {
+    client.getChannelByName("general")
+  } else {
+    client.getChannelByName("test2")
+  }
+
+  val targetUser = if (env == Production) {
+    "takashima"
+  } else {
+    "rinu"
   }
 
   /**
@@ -91,18 +102,6 @@ object SleepNelBot extends App {
    */
   def main(): Unit = {
     addShutdownHook()
-
-    val defaultChannel = if (env == Production) {
-      client.getChannelByName("general")
-    } else {
-      client.getChannelByName("test2")
-    }
-
-    val targetUser = if (env == Production) {
-      "takashima"
-    } else {
-      "rinu"
-    }
 
     /**
      * 「進捗どうですか?」する
@@ -144,6 +143,7 @@ object SleepNelBot extends App {
       true
     }
 
+    // neko search
     for {key <- theCatApiKeyOption} {
       val theCatApi = new TheCatApi(key)
       addHandler( """.*(?:ねこ|猫).*""".r) { m =>
@@ -154,6 +154,69 @@ object SleepNelBot extends App {
       }
     }
 
+    // image search
+    for {apiKey <- cseApiKey; searchEngineId <- cseSearchEngineId} {
+      val customSearch = new GoogleCustomSearch(apiKey, searchEngineId)
+
+      addHandler { m =>
+        val textBody = m.text.replaceAll( """<@\w+>:?""", "")
+
+        def searchOne(word: String): Unit = {
+          for {res <- customSearch.searchImages(word)
+          } {
+            val msg = "探してきたの〜"
+            if (res.images.nonEmpty) {
+              webApi.chatPostMessage(
+                m.channel,
+                Some(msg),
+                List(Attachment("画像なの",
+                  image_url = Some(randomly(res.images).uri.toString)
+                )),
+                asUser = true
+              )
+            }
+          }
+        }
+
+        def searchAll(word: String): Unit = {
+          for {res <- customSearch.searchImages(word)
+          } {
+            val msg = "いっぱい探してきたの〜"
+            webApi.chatPostMessage(
+              m.channel,
+              Some(msg),
+              res.images.map(image => Attachment("画像なの",
+                title = Some(image.title),
+                title_link = Some(image.uri.toString),
+                thumb_url = Some(image.thumbnailUri.toString))
+              ),
+              asUser = true)
+          }
+        }
+
+        def search(word: String): Unit = {
+          if (textBody.matches(".*(?:ぜんぶ|すべて|全て|all|list).*")) {
+            searchAll(word)
+          } else {
+            searchOne(word)
+          }
+        }
+
+        val Re = """(.*)(?:の画像).*""".r
+        val Re2 = ".*&lt;(.*?)&gt;.*".r
+
+        textBody match {
+          case Re(word) => search(word)
+            true
+          case Re2(word) => search(word)
+            true
+          case _ =>
+            false
+        }
+      }
+    }
+
+    // chat
     for {key <- simsimiApiKeyOption} {
       val simsimiApi = new SimSimiClient(key)
 

@@ -18,3 +18,18 @@ bin/sbt "runMain nu.rinu.slackbot.SleepNelBot"
 
 push してしばらく(2~3分)待ってね
 
+
+
+# 各種 API について
+
+## Google Custom Search
+
+### ドキュメント
+https://developers.google.com/custom-search/json-api/v1/introduction
+この辺り
+
+### API Key の発行/Custom Search Engine の作成
+https://developers.google.com/custom-search/json-api/v1/introduction
+この辺りを参考に。
+
+

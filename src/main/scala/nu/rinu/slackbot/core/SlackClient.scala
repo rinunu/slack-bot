@@ -23,51 +23,50 @@ object SlackClient {
   private case class SimpleMessageEventJson(channel: String, user: String, text: String)
 
   private case class UserJson(
-                               id: String,
-                               name: String
-                               )
+    id: String,
+    name: String
+  )
 
 
   private case class ChannelJson(
-                                  id: String,
-                                  name: String
-                                  )
+    id: String,
+    name: String
+  )
 
   private case class RtmStartJson(
-                                   url: String,
-                                   ok: Boolean,
-                                   self: UserJson,
-                                   team: Any,
-                                   users: Array[UserJson],
-                                   channels: Array[ChannelJson]
-                                   )
+    url: String,
+    ok: Boolean,
+    self: UserJson,
+    team: Any,
+    users: Array[UserJson],
+    channels: Array[ChannelJson]
+  )
 
   /**
    * 送信用
    */
   private case class MessageJson(
-                                  id: Int,
-                                  channel: String,
-                                  text: String,
-                                  `type`: String = "message"
-                                  )
+    id: Int,
+    channel: String,
+    text: String,
+    `type`: String = "message"
+  )
 
   case class Channel(
-                      id: String,
-                      name: String
-                      )
+    id: String,
+    name: String
+  )
 
   case class User(
-                   id: String,
-                   name: String
-                   )
+    id: String,
+    name: String
+  )
 
   case class Message(
-                      channel: Channel,
-                      user: User,
-                      text: String
-                      )
-
+    channel: Channel,
+    user: User,
+    text: String
+  )
 
 }
 
