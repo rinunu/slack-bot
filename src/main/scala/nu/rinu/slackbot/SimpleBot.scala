@@ -183,7 +183,7 @@ class SimpleBot(slackToken: String, additionalHandlers: Seq[Handler] = Seq.empty
 
     addHandler(".*進捗(?:だめ|ダメ).*".r) { m =>
       if (m.text.contains(rtmApi.self.id)) {
-        say(m.channel, "ぴええええええ！")
+        say(m.channel, s"@${m.user.name} ぴええええええ！")
         true
       } else {
         false
