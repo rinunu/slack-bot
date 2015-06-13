@@ -18,10 +18,11 @@ object SleepNelBot extends App {
 
   addShutdownHook()
 
-  for {i <- 0 to 10
-       token <- getenvOption("SLACK_TOKEN" + i)
-  } {
+  val bots = for {i <- 0 to 10
+                  token <- getenvOption("SLACK_TOKEN" + i)} yield {
     println(s"start bot $i")
     new SimpleBot(token)
   }
+
+  bots.head.messages.toBlocking.last
 }

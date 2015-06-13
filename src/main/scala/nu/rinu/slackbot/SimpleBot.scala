@@ -33,8 +33,9 @@ class SimpleBot(slackToken: String) {
 
   private val client = new SlackClient(httpTransport, slackToken)
   private val webApi = new SlackWebApi(slackToken)
+
   // 自分自身の発言は無視する(主に複数起動時)
-  private val messages = for {m <- client.getMessages if m.user != client.self} yield m
+  val messages = for {m <- client.getMessages if m.user != client.self} yield m
 
   private val random = new Random()
 
@@ -133,7 +134,7 @@ class SimpleBot(slackToken: String) {
       }
     }
 
-//    Scheduler.add[ShinchokuDodesukaJob]("0 0 10-1/3 * * ?")
+    //    Scheduler.add[ShinchokuDodesukaJob]("0 0 10-1/3 * * ?")
 
     // image search
     for {apiKey <- cseApiKey; searchEngineId <- cseSearchEngineId} {
