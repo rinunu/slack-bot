@@ -3,13 +3,13 @@ package nu.rinu.slackbot.core
 import java.net.URI
 import javax.websocket._
 
-import com.google.api.client.http.{GenericUrl, HttpTransport}
 import nu.rinu.slackbot.core.SlackClient._
 import org.json4s._
-import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization
 import rx.lang.scala.Observable
 import rx.lang.scala.subjects.PublishSubject
+
+import scalaj.http.Http
 
 object SlackClient {
 
@@ -74,7 +74,7 @@ object SlackClient {
  * 発言をひたすら通知します
  */
 @ClientEndpoint()
-class SlackClient(httpTransport: HttpTransport, token: String) {
+class SlackClient(token: String) {
   private var userSession: Session = _
 
   private implicit val formats = DefaultFormats
@@ -94,17 +94,15 @@ class SlackClient(httpTransport: HttpTransport, token: String) {
 
   private def connect() {
     log("WS 接続情報を取得します")
-    val requestFactory = httpTransport.createRequestFactory()
-    val url = new GenericUrl("https://slack.com/api/rtm.start?token=" + token)
+    val endpoint = new URI("https://slack.com/api/rtm.start")
 
-    val req = requestFactory.buildGetRequest(url)
-    val res = req.execute()
+    val req = Http(endpoint.toString).param("token", token)
 
-    val wsUri = try {
-      val resStr = res.parseAsString()
-      log(resStr)
+    val wsUri = {
+      val resStr = req.asString
+      log("受信 " + resStr.body)
 
-      val startRes = parseAs[RtmStartJson](resStr)
+      val startRes = parseAs[RtmStartJson](resStr.body)
       if (!startRes.ok) {
         throw new RuntimeException("接続失敗")
       }
@@ -116,8 +114,6 @@ class SlackClient(httpTransport: HttpTransport, token: String) {
       channels_ = startRes.channels.map(channel)
 
       new URI(startRes.url)
-    } finally {
-      res.disconnect()
     }
 
     log("WS 接続します")
@@ -146,12 +142,12 @@ class SlackClient(httpTransport: HttpTransport, token: String) {
   }
 
   private def parseAs[A: Manifest](s: String): A = {
-    parse(s).extract[A]
+    Serialization.read[A](s)
   }
 
   @OnMessage
   def onMessage(message: String) {
-//    log("受信: " + message)
+    //    log("受信: " + message)
 
     val a = parseAs[BaseEventJson](message)
     (a.`type`, a.subtype) match {

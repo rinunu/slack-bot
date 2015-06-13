@@ -35,8 +35,6 @@ libraryDependencies += "org.quartz-scheduler" % "quartz" % "2.2.1"
 
 libraryDependencies +=  "org.scalaj" %% "scalaj-http" % "1.1.4"
 
-libraryDependencies += "com.google.http-client" % "google-http-client" % "1.20.0"
-
 // compile 'io.reactivex:rxjava-async-util:0.21.0'
 
 

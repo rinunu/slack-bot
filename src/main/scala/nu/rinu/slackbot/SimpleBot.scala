@@ -3,13 +3,12 @@ package nu.rinu.slackbot
 import java.net.URI
 import java.util.Random
 
-import com.google.api.client.http.javanet.NetHttpTransport
 import nu.rinu.slackbot.core.SlackClient.{Channel, Message}
 import nu.rinu.slackbot.core.SlackWebApi.Attachment
 import nu.rinu.slackbot.core.{SlackClient, SlackWebApi}
 import nu.rinu.slackbot.util.SimSimiClient.Response
 import nu.rinu.slackbot.util.Utils._
-import nu.rinu.slackbot.util.{Scheduler, _}
+import nu.rinu.slackbot.util._
 import org.quartz.{Job, JobExecutionContext}
 import rx.lang.scala.Observable
 
@@ -17,7 +16,6 @@ import scala.util.matching.Regex
 
 
 class SimpleBot(slackToken: String) {
-  private val httpTransport = new NetHttpTransport
   private val Production = "production"
 
   private val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
@@ -31,7 +29,7 @@ class SimpleBot(slackToken: String) {
 
   private val simsimiNgWords = Set("まっくす")
 
-  private val client = new SlackClient(httpTransport, slackToken)
+  private val client = new SlackClient(slackToken)
   private val webApi = new SlackWebApi(slackToken)
 
   // 自分自身の発言は無視する(主に複数起動時)

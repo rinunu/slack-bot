@@ -1,12 +1,10 @@
 package nu.rinu.slackbot.util
 
-import com.google.api.client.http.{GenericUrl, HttpTransport}
-import nu.rinu.slackbot.util.DialogueApi.{ResponseJson, Response, RequestJson}
+import nu.rinu.slackbot.util.DialogueApi.{RequestJson, Response, ResponseJson}
 import org.json4s.DefaultFormats
-import org.json4s._
-import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization
 import rx.lang.scala.Observable
+
 import scalaj.http._
 
 
@@ -56,7 +54,7 @@ class DialogueApi(apiKey: String) {
         utt = text,
         nickname = Some(nickname),
         context = userContextMap.get(nickname),
-        mode = Some("srtr") 
+        mode = Some("srtr")
       )
       val bodyJson = Serialization.write(body)
       println(bodyJson)
