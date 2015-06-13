@@ -168,14 +168,6 @@ class SimpleBot(slackToken: String, additionalHandlers: Seq[Handler] = Seq.empty
       }
     }
 
-    val lgtm = new Lgtm()
-    addHandler("lgtm".r) { m =>
-      for {res <- lgtm.request()} {
-        sayImage(m.channel, "lgtm too!", res.imageUri)
-      }
-      true
-    }
-
     addHandler(".*まっくす.*".r) { m =>
       say(m.channel, s"まっくすまっくす！")
       true

@@ -13,10 +13,11 @@ import scalaj.http.Http
 object Lgtm {
 
   private case class ResponseJson(
-    imageUrl: String
+    imageUrl: String,
+    markdown: String
   )
 
-  case class Response(imageUri: URI)
+  case class Response(imageUri: URI, markdown: String)
 
 }
 
@@ -36,7 +37,7 @@ class Lgtm {
       if (res.isSuccess) {
         println("受信 " + res.body)
         val resJson = Serialization.read[ResponseJson](res.body)
-        s.onNext(Response(new URI(resJson.imageUrl)))
+        s.onNext(Response(new URI(resJson.imageUrl), resJson.markdown))
         s.onCompleted()
       } else {
         sys.error(s"error: code = ${res.code}, ${res.body}")
