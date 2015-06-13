@@ -216,6 +216,14 @@ object SleepNelBot extends App {
       }
     }
 
+    val lgtm = new Lgtm()
+    addHandler("lgtm".r) { m =>
+      for {res <- lgtm.request()} {
+        sayImage(m.channel, "lgtm too!", res.imageUri)
+      }
+      true
+    }
+
     addHandler(".*進捗(?:だめ|ダメ).*".r) { m =>
       say(m.channel, "ぴええええええ！")
       true
