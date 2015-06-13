@@ -186,7 +186,7 @@ object SleepNelBot extends App {
           }
         }
 
-        val Re = """(.*)(?:の画像).*""".r
+        val Re = """(.*)(?:の?画像).*""".r
         val Re2 = ".*&lt;(.*?)&gt;.*".r
 
         textBody match {
@@ -260,7 +260,7 @@ object SleepNelBot extends App {
       }
     }
 
-    client.send(defaultChannel, s"もどったの〜")
+//    client.send(defaultChannel, s"もどったの〜")
 
     messages.toBlocking.last
   }
