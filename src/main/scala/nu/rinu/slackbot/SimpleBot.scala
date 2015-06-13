@@ -15,17 +15,13 @@ import rx.lang.scala.Observable
 import scala.util.matching.Regex
 
 
-class SimpleBot(slackToken: String) {
-  private val Production = "production"
-
+class SimpleBot(slackToken: String, targetUser: String) {
   private val docomoApiKeyOption = getenvOption("DOCOMO_API_KEY")
   private val simsimiApiKeyOption = getenvOption("SIMSIMI_API_KEY")
   private val theCatApiKeyOption = getenvOption("THE_CAT_API_KEY")
 
   private val cseSearchEngineId = getenvOption("CSE_SEARCH_ENGINE_ID")
   private val cseApiKey = getenvOption("CSE_API_KEY")
-
-  private val env = getenvOption("ENV").getOrElse("develop")
 
   private val simsimiNgWords = Set("まっくす")
 
@@ -88,18 +84,6 @@ class SimpleBot(slackToken: String) {
     )
   }
 
-  private val defaultChannel = if (env == Production) {
-    client.getChannelByName("general")
-  } else {
-    client.getChannelByName("test2")
-  }
-
-  private val targetUser = if (env == Production) {
-    "takashima"
-  } else {
-    "rinu"
-  }
-
   /**
    * ボットの処理
    *
@@ -109,7 +93,7 @@ class SimpleBot(slackToken: String) {
     /**
      * 「進捗どうですか?」する
      */
-    def shinchokuDodesuka(user: String): Unit = {
+    def shinchokuDodesuka(channel: Channel, user: String): Unit = {
       val urls = Seq(
         "http://img2.finalfantasyxiv.com/accimg/01/00/0100ad42c5b1eb63e34023b2673dbd1575a71cc2.jpg",
         "http://40.media.tumblr.com/c47cbed880e821146fb67a6cf1d9993d/tumblr_mqpqr1e07H1sckns5o1_1280.jpg",
@@ -120,18 +104,18 @@ class SimpleBot(slackToken: String) {
         "http://36.media.tumblr.com/c79d6b59dc4ee10595564c8aafc2225e/tumblr_mrkrngeogp1sckns5o1_500.png",
         "http://40.media.tumblr.com/bcdb555421139b93fcf516bc9ac7fff9/tumblr_n9zdk1Btkx1sckns5o1_1280.jpg"
       )
-      sayImage(defaultChannel, s"@$user 進捗どうですか?", new URI(randomly(urls)))
+      sayImage(channel, s"@$user 進捗どうですか?", new URI(randomly(urls)))
     }
 
-    /**
-     * 定期的に「進捗どうですか?」する
-     */
-    class ShinchokuDodesukaJob extends Job {
-      override def execute(context: JobExecutionContext) {
-        shinchokuDodesuka(targetUser)
-      }
-    }
-
+    //    /**
+    //     * 定期的に「進捗どうですか?」する
+    //     */
+    //    class ShinchokuDodesukaJob extends Job {
+    //      override def execute(context: JobExecutionContext) {
+    //        shinchokuDodesuka(targetUser)
+    //      }
+    //    }
+    //
     //    Scheduler.add[ShinchokuDodesukaJob]("0 0 10-1/3 * * ?")
 
     // image search
@@ -218,7 +202,7 @@ class SimpleBot(slackToken: String) {
     }
 
     addHandler(".*進捗.*".r) { m =>
-      shinchokuDodesuka(targetUser)
+      shinchokuDodesuka(m.channel, targetUser)
       true
     }
 
@@ -247,8 +231,6 @@ class SimpleBot(slackToken: String) {
         }
       }
     }
-
-    //    client.send(defaultChannel, s"もどったの〜")
   }
 
   main()

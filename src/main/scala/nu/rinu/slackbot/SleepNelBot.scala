@@ -5,7 +5,9 @@ import nu.rinu.slackbot.util.Utils._
 
 
 object SleepNelBot extends App {
-  // TODO messages.toBlocking.last
+  private val Production = "production"
+
+  private val env = getenvOption("ENV").getOrElse("develop")
 
   private def addShutdownHook() {
     Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
@@ -18,10 +20,16 @@ object SleepNelBot extends App {
 
   addShutdownHook()
 
+  private val targetUser = if (env == Production) {
+    "takashima"
+  } else {
+    "rinu"
+  }
+
   val bots = for {i <- 0 to 10
                   token <- getenvOption("SLACK_TOKEN" + i)} yield {
     println(s"start bot $i")
-    new SimpleBot(token)
+    new SimpleBot(token, targetUser)
   }
 
   bots.head.messages.toBlocking.last
