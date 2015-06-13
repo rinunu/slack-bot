@@ -35,8 +35,7 @@ class SimSimiClient(apiKey: String) {
         "text" -> text,
         "lc" -> "ja",
         "ft" -> "0" // filter
-      )
-      req.timeout(2000, 2000)
+      ).timeout(2000, 2000)
 
       val res = req.asString
       if (res.isSuccess) {

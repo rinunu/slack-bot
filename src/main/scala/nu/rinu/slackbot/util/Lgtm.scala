@@ -30,9 +30,7 @@ class Lgtm {
       val req = Http(endpoint).headers(
         "Content-Type" -> "application/json",
         "Accept" -> "application/json"
-      )
-
-      req.timeout(5000, 5000)
+      ).timeout(5000, 5000)
 
       val res = req.asString
       if (res.isSuccess) {

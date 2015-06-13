@@ -46,9 +46,7 @@ class GoogleCustomSearch(apiKey: String, searchEngineId: String) {
         "cx" -> searchEngineId,
         "q" -> word,
         "searchType" -> "image"
-      )
-
-      req.timeout(5000, 5000)
+      ).timeout(5000, 5000)
 
       val res = req.asString
       if (res.isSuccess) {
