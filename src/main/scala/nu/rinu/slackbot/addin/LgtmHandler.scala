@@ -26,6 +26,8 @@ class LgtmHandler(trigger: Regex) extends Handler {
           )
         }
         true
+      case _ =>
+        false
     }
   }
 }

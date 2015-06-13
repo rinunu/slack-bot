@@ -13,6 +13,7 @@ import nu.rinu.slackbot.util._
 import org.quartz.{Job, JobExecutionContext}
 import rx.lang.scala.Observable
 
+import scala.util.control.NonFatal
 import scala.util.matching.Regex
 
 
@@ -34,11 +35,23 @@ class SimpleBot(slackToken: String, additionalHandlers: Seq[Handler] = Seq.empty
 
   private val random = new Random()
 
+  private def log(a: Any) {
+    println(a)
+  }
+
   private type HandlerFn = Message => Boolean
   private var handlers = List.empty[HandlerFn]
 
   for {m <- messages} {
-    handlers.find(f => f(m))
+    handlers.find { f =>
+      try {
+        f(m)
+      } catch {
+        case NonFatal(e) =>
+          log(e)
+          false
+      }
+    }
   }
 
   /**
