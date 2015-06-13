@@ -4,10 +4,8 @@ import java.net.URI
 
 import nu.rinu.slackbot.core.SlackClient.Channel
 import nu.rinu.slackbot.core.SlackWebApi.{Attachment, ResponseJson}
-import nu.rinu.slackbot.util.GoogleCustomSearch.Image
 import org.json4s.DefaultFormats
 import org.json4s.native.Serialization
-import rx.lang.scala.Observable
 
 import scalaj.http.Http
 
@@ -93,7 +91,7 @@ class SlackWebApi(token: String) {
 
     val res = req.asString
     if (res.isSuccess) {
-      println("受信 " + res.body)
+//      println("受信 " + res.body)
       val resJson = Serialization.read[ResponseJson](res.body)
     } else {
       sys.error(s"error: code = ${res.code}, ${res.body}")

@@ -4,14 +4,17 @@ slack bot
 
 # 実行
 ```sh
-export SLACK_TOKEN=xxxxx
+export SLACK_TOKEN0=xxxxx
 export SIMSIMI_API_KEY=xxxxx # option
 export THE_CAT_API_KEY=xxxxx # option
+export CSE_SEARCH_ENGINE_ID=xxxxx # option
+export CSE_API_KEY=xxxxx # option
+
 bin/sbt "runMain nu.rinu.slackbot.SleepNelBot"
 ```
 
 # いじる時は
-`nu.rinu.slackbot.SleepNelBot` をいじってね
+[nu.rinu.slackbot.SimpleBot](src/main/scala/nu/rinu/slackbot/SimpleBot.scala) をいじってね
 
 
 # 本番デプロイ

@@ -151,7 +151,7 @@ class SlackClient(httpTransport: HttpTransport, token: String) {
 
   @OnMessage
   def onMessage(message: String) {
-    log("受信: " + message)
+//    log("受信: " + message)
 
     val a = parseAs[BaseEventJson](message)
     (a.`type`, a.subtype) match {
