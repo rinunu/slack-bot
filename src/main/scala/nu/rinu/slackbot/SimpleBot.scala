@@ -182,7 +182,7 @@ class SimpleBot(slackToken: String, additionalHandlers: Seq[Handler] = Seq.empty
     }
 
     addHandler(".*まっくす.*".r) { m =>
-      sayImage(m.channel, s"ふふふ", new URI("http://train.sleepnel.me/images/max.png"))
+      sayImage(m.channel, s"HAHAHA!", new URI("http://train.sleepnel.me/images/max.png"))
       true
     }
 
